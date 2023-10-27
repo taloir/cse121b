@@ -1,43 +1,33 @@
-const main = () => {
-    let population = getPopulation();
-    let typeCount = countTypes(population)
-    /*let percentages = calculatePercentages(typeCount)*/
-    displayData(typeCount);
+const displayStatistics = (percentList, totalList) => {
+    statisticsElement = document.getElementById("statistics")
+    populationTotal = document.createElement("p")
+    populationTotal.innerHTML = `Total Populaiton: ${totalList["All"]}`
+    statisticsElement.appendChild(populationTotal)
 
-    /*
-    displayStatistics(percentages)
-    recommendations = getRecommendations(percentages)
-    displayRecommendations(recommendations)*/
-    }
-   
-const displayData = async (data) => {
-    const displayElement = document.getElementById("recommendations");
-    let string = JSON.stringify(data)
-    displayElement.innerHTML = `${string}`
-
-}
-
-
-
-
-/*
-const displayStatistics = () => {
-    statisticsElement = document.getElementById("#statistics")
-    statisticsElement.textContent = "Population total: <strong>${populationCount}<strong/>"
-    typePercentages.forEach(() => {
-        typePercent = document.createElement("p")
-        typePercent.textContent = "<strong>${type}<strong/>: <strong>${percent}<strong/>"
+    statArray = Object.entries(percentList)
+    statArray.forEach((type) => {
+        if (type[0] != "All") {
+            typePercent = document.createElement("p")
+            typeCount = totalList[type[0]]
+            typePercent.innerHTML = `${type[0]}: ${type[1].toString()}% (${typeCount})`
+            statisticsElement.appendChild(typePercent)
+        }
     })
 }
 
 const displayRecommendations = (recommendations) => {
-    let recommendationsElement = document.getElementById("#recommendations")
-    recommendationsElement.textContent = "Recommendations: " + recommendations[0] + ", " + recommendations[1] + ", and " + recommendations[2]
+    const recommendationsElement = document.getElementById("recommendations")
+    recommendationsElement.innerHTML = `${recommendations[0]}, ${recommendations[1]}, and ${recommendations[2]}`
 }
- 
+
 const getRecommendations = (typePercentages) => {
-    let sorted = Object.entries(typePercentages).sort((a,b) => b[1]-a[1])
+    let sorted = Object.entries(typePercentages).sort((a,b) => a[1]-b[1])
     let recommendations = []
+    sorted.forEach((entry) => {
+        if (entry[1] < 200/(sorted.length-1)){
+            entry[0] = entry[0].toUpperCase() 
+        }
+    })
     recommendations.push(sorted[0][0])
     recommendations.push(sorted[1][0])
     recommendations.push(sorted[2][0])
@@ -47,25 +37,25 @@ const getRecommendations = (typePercentages) => {
 const calculatePercentages = (totalsList) => {
     let percentageList= {}
     for (const [key, value] of Object.entries(totalsList)){
-        percentage = value/totalsList["all"]
+        percentage = Math.round(100*value/totalsList["All"])
         percentageList[key] = percentage
     }
     return(percentageList)
-}*/
+}
 
 const countTypes = (list) => {
     let typeTotals = {}
-    typeTotals["all"] = 0
+    typeTotals["All"] = 0
     let array = Array.from(list)
     array.forEach((metamon) => {
-        typeTotals["all"] ++
+        typeTotals["All"] ++
         let typeList = metamon.Types
-        for(type in typeList) {
+        typeList.forEach((type) => {
             if (typeTotals.hasOwnProperty(type) == false) {
                 typeTotals[type] = 0;
             }
             typeTotals[type] ++
-        };
+        });
     });
     return(typeTotals)
 } 
@@ -74,8 +64,12 @@ const getPopulation = async () => {
     const population = await fetch("https://run.mocky.io/v3/c241f581-be47-4bd7-9cb5-1d2beb01ad87");
     if (population.ok){
     const metamonList = await population.json();
-    return(metamonList);
+    totals = countTypes(metamonList)
+    percentages = calculatePercentages(totals)
+    recommendations = getRecommendations(percentages)
+    displayRecommendations(recommendations)
+    displayStatistics(percentages, totals)
     }
 }
 
-main()
+getPopulation()
